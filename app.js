@@ -1,9 +1,12 @@
 const express = require("express");
+require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
 const morgan = require("morgan");
+
 // routes imports
 const home = require("./routes/home");
+const user = require("./routes/user");
 
 // app
 const app = express();
@@ -18,5 +21,6 @@ app.use(morgan("tiny"));
 
 // router middleware
 app.use("/api/v1", home);
+app.use("/api/v1", user);
 
 module.exports = app;
