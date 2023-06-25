@@ -5,6 +5,7 @@ const cookieToken = (user, res) => {
     expires: new Date(
       Date.now() + process.env.COOKIE_EXPIRY * 24 * 60 * 60 * 1000
     ),
+    httpOnly: true,
   };
   user.password = undefined;
   res.status(201).cookie("Token", token, option).json({

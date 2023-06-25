@@ -60,3 +60,16 @@ exports.login = async (req, res) => {
 
   cookieToken(user, res);
 };
+
+exports.logout = async (req, res) => {
+  res
+    .cookie("Token", null, {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+    })
+    .status(200)
+    .json({
+      success: true,
+      message: "Logout successfully",
+    });
+};
