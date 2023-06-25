@@ -58,8 +58,5 @@ exports.login = async (req, res) => {
       .json({ success: false, message: "Password does not match" });
   }
 
-  return res.status(200).json({
-    success: true,
-    message: "login is successfully done",
-  });
+  cookieToken(user, res);
 };
