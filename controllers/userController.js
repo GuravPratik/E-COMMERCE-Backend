@@ -31,3 +31,35 @@ exports.SignUp = BigPromise(async (req, res, next) => {
 
   cookieToken(user, res);
 });
+
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Please enter email and password",
+    });
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "User is not exist! Please first Sign up",
+    });
+  }
+
+  const matchPassword = await user.isPasswordMatch(password);
+  if (!matchPassword) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Password does not match" });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "login is successfully done",
+  });
+};
