@@ -11,11 +11,17 @@ const user = require("./routes/user");
 // app
 const app = express();
 
+app.set("view engine", "ejs");
 // regular middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(fileUpload());
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+  })
+);
 
 app.use(morgan("tiny"));
 
