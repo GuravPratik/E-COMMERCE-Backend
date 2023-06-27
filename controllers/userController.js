@@ -179,3 +179,178 @@ exports.getLoggedInUserDetails = async (req, res) => {
     user,
   });
 };
+
+exports.passwordUpdate = async (req, res) => {
+  // get user from the token
+  try {
+    const user = await User.findById(req.user.id);
+
+    // check if the oldPassword is match or not
+    const isOldPasswordMatch = await user.isPasswordMatch(req.body.oldPassword);
+
+    if (!isOldPasswordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Please enter correct old Password",
+      });
+    }
+
+    // update password with new password
+    user.password = req.body.confirmPassword;
+
+    await user.save();
+
+    // sending new updated token and user
+    cookieToken(user, res);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+      success: false,
+    });
+  }
+};
+
+exports.updateUserDetails = async (req, res) => {
+  try {
+    const updateData = {};
+
+    if (req.body.name) {
+      updateData.name = req.body.name;
+    }
+
+    if (req.body.email) {
+      updateData.email = req.body.email;
+    }
+
+    if (req.files) {
+      const previousDP = await User.findById(req.user.id);
+
+      // delete the previous image
+      await cloudinary.v2.uploader.destroy(previousDP.photo.id);
+      const file = req.files.displayPhoto;
+      // update the new image
+      const result = await cloudinary.v2.uploader.upload(file.tempFilePath, {
+        folder: "Ecommerce_Backend",
+        width: 150,
+        crop: "scale",
+      });
+      // get public_id and secure url of the new image
+      updateData.photo = {
+        id: result.public_id,
+        secure_url: result.secure_url,
+      };
+    }
+
+    // update the user info
+    const user = await User.findByIdAndUpdate(req.user.id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    res.status(200).json({
+      success: true,
+      message: "User info is updated successfully",
+      user,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+// admin controllers
+
+exports.adminGetAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.adminGetSingleUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.adminUpdateUserRole = async (req, res) => {
+  try {
+    const updateData = { role: req.body.role };
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("-password");
+
+    return res.status(200).json({
+      success: true,
+      message: "User role change to Admin",
+      updatedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.adminDeleteSingleUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    await cloudinary.v2.uploader.destroy(user.photo.id);
+
+    await User.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "user is deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
