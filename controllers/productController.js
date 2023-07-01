@@ -118,6 +118,60 @@ exports.getSingleProduct = async (req, res) => {
   });
 };
 
+exports.addProductReview = async (req, res) => {
+  try {
+    const { rating, comment, productId } = req.body;
+
+    const review = {
+      user: req.user.id,
+      name: req.user.name,
+      rating: Number(rating),
+      comment,
+    };
+
+    const product = await Product.findById(productId);
+
+    let isAlreadyReview = false;
+    if (product.reviews.length > 0) {
+      for (let idx = 0; idx < product.reviews.length; idx++) {
+        if (product.reviews[idx].user.toString() === req.user._id.toString()) {
+          isAlreadyReview = true;
+        }
+      }
+    }
+    if (isAlreadyReview) {
+      product.reviews.forEach((review) => {
+        if (review.user.toString() === req.user._id.toString()) {
+          review.comment = comment;
+          review.rating = Number(rating);
+        }
+      });
+    } else {
+      product.reviews.push(review);
+      product.numberOfReviews = product.reviews.length;
+    }
+    console.log("Before: ");
+    console.log(product.ratings);
+    product.ratings =
+      product.reviews.reduce((item, acc) => {
+        item.rating + acc, 0;
+      }) / product.reviews.length;
+    console.log("After: ");
+    console.log(product.ratings);
+    await product.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      success: true,
+      message: "Review is successfully added",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 exports.adminGetAllProduct = async (req, res) => {
   const products = await Product.find();
 

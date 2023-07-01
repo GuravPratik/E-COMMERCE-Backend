@@ -8,6 +8,7 @@ const morgan = require("morgan");
 const home = require("./routes/home");
 const user = require("./routes/user");
 const product = require("./routes/product");
+const order = require("./routes/order");
 // app
 const app = express();
 
@@ -29,5 +30,6 @@ app.use(morgan("tiny"));
 app.use("/api/v1", home);
 app.use("/api/v1", user);
 app.use("/api/v1", product);
+app.use("/api/v1", order);
 
 module.exports = app;

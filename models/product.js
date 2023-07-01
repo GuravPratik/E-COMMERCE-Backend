@@ -47,7 +47,7 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: [true, "Please add the number of stock"],
   },
-  rating: {
+  ratings: {
     type: Number,
     default: 0,
   },
